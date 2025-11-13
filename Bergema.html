@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bergema Sampai Selamanya</title>
+<style>
+  :root {
+    --accent:#00ffff;
+    --pink:#ff66cc;
+    --bg:#000;
+  }
+  html,body{
+    margin:0;height:100%;
+    font-family:Poppins,system-ui,Arial;
+    background:var(--bg);
+    color:#fff;
+    overflow:hidden;
+  }
+  .wrap{
+    height:100vh;width:100%;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+  }
+  .photo{
+    position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;opacity:0;transition:opacity 2s ease;
+    filter:brightness(.5);
+  }
+  .photo.show{opacity:1;}
+  .content{
+    z-index:5;text-align:center;padding:24px;width:90%;
+  }
+  #intro,#title{
+    font-size:1.3rem;margin:6px 0;color:var(--accent);
+    text-shadow:0 0 12px #00ffff;opacity:0;transition:opacity .8s;
+  }
+  #lyrics{
+    font-size:1.9rem;line-height:1.4;margin-top:18px;
+    color:#fff;text-shadow:0 0 10px rgba(0,0,0,.7);
+    min-height:120px;
+  }
+  #ending{
+    font-size:1.3rem;color:var(--pink);
+    margin-top:24px;opacity:0;transition:opacity 2s;
+  }
+  button{
+    background:var(--accent);color:#001;
+    border:none;padding:12px 20px;border-radius:10px;
+    cursor:pointer;font-weight:600;
+    box-shadow:0 0 15px #00ffff;
+    transition:transform .2s,box-shadow .3s,opacity 1s;
+    opacity:0;
+  }
+  button.show{opacity:1;}
+  button.hide{display:none;}
+  button:hover{
+    transform:scale(1.1);
+    box-shadow:0 0 25px #00ffff;
+  }
+  @media(max-width:480px){
+    #lyrics{font-size:1.3rem;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <img class="photo" src="foto1.jpg">
+  <img class="photo" src="foto2.jpg">
+  <img class="photo" src="foto3.jpg">
+  <img class="photo" src="foto4.jpg">
+  <img class="photo" src="foto5.jpg">
+
+  <div class="content">
+    <div id="intro"></div>
+    <div id="title"></div>
+    <button id="startBtn">💗 Putar Lagu</button>
+    <div id="lyrics"></div>
+    <div id="ending"></div>
+  </div>
+</div>
+
+<audio id="song" src="bergema.mp3" preload="auto"></audio>
+
+<script>
+const intro = document.getElementById("intro");
+const title = document.getElementById("title");
+const startBtn = document.getElementById("startBtn");
+const lyricsDiv = document.getElementById("lyrics");
+const ending = document.getElementById("ending");
+const song = document.getElementById("song");
+const photos = document.querySelectorAll(".photo");
+
+// efek ngetik intro
+function typeText(el, text, speed = 60, cb) {
+  el.textContent = "";
+  el.style.opacity = 1;
+  let i = 0;
+  (function step() {
+    if (i < text.length) {
+      el.textContent += text.charAt(i++);
+      setTimeout(step, speed);
+    } else if (cb) setTimeout(cb, 700);
+  })();
+}
+
+// efek ngetik lirik per huruf
+function typeLyric(text, speed = 60) {
+  lyricsDiv.textContent = "";
+  let i = 0;
+  return new Promise(resolve => {
+    (function step() {
+      if (i < text.length) {
+        lyricsDiv.textContent += text.charAt(i++);
+        setTimeout(step, speed);
+      } else resolve();
+    })();
+  });
+}
+
+// ganti foto
+function showPhoto(index) {
+  photos.forEach((p, i) => p.classList.toggle("show", i === index));
+}
+
+// data lirik
+const lyrics = [
+  { text: "Aku ingin jadi teman nyamanmu 💞", time: 0, photo: 0 },
+  { text: "Tempat kau hilangkan keluh kesahmu 💫", time: 6, photo: 1 },
+  { text: "Kita berbincang tak karuan tanpa beban 🎶", time: 12, photo: 2 },
+  { text: "Dan juga hayalan tentang masa depan ✨", time: 18, photo: 3 },
+  { text: "Ku tak ingin cepat berlalu 💕", time: 26, photo: 4 },
+  { text: "Waktu yang ku punya denganmu 💖", time: 32, photo: 1 },
+  { text: "Kita berdansa dan tertawa gandeng tangan 💃🕺", time: 37.5, photo: 2 },
+  { text: "Semoga bergema sampai selamanya 💞", time: 43.5, photo: 0 }
+];
+
+let scheduled = [];
+function clearScheduled() {
+  scheduled.forEach(t => clearTimeout(t));
+  scheduled = [];
+}
+
+function playSequence() {
+  clearScheduled();
+  
+  lyrics.forEach(line => {
+    const t = setTimeout(() => {
+      showPhoto(line.photo);
+      typeLyric(line.text);
+    }, line.time * 1000);
+    scheduled.push(t);
+  });
+
+  const lastTime = (lyrics[lyrics.length - 1].time + 7) * 1000;
+  scheduled.push(setTimeout(() => {
+    lyricsDiv.textContent = "";
+    ending.textContent = "Buat kamu, wanita yang paling kusayang — Michaela 💖";
+    ending.style.opacity = 1;
+    showPhoto(-1); // semua foto hilang
+  }, lastTime));
+}
+
+// tombol play
+startBtn.addEventListener("click", () => {
+  intro.style.opacity = 0;
+  title.style.opacity = 0;
+  startBtn.classList.add("hide"); // tombol hilang sepenuhnya
+  song.currentTime = 0;
+  song.play().then(() => playSequence());
+});
+
+// intro ketik dulu, baru tombol muncul
+typeText(intro, "Aku ada lagu nih, kamu mau denger gak? 💬", 60, () => {
+  typeText(title, "🎵 Bergema Sampai Selamanya 🎵", 60, () => {
+    startBtn.classList.add("show");
+  });
+});
+
+showPhoto(-1);
+</script>
+</body>
+</html>
